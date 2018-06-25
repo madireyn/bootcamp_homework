@@ -1,58 +1,146 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Collections;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Collections.Tests
 {
     [TestClass()]
     public class ArrayDictionaryTests
     {
-        [TestMethod()]
-        public void PutSameKeyTest()
+        private IDictionary<string, string> MakeBasicDictionary()
         {
-            IDictionary<string, string> dict = new ArrayDictionary<string, string>();
-            dict.Add("a", "b");
-            var size = dict.Count;
+            var dict = new ArrayDictionary<string, string>
+            {
+                { "keyA", "valA" },
+                { "keyB", "valB" },
+                { "keyC", "valC" }
+            };
+            return dict;
+        }
 
-            dict.Add("a", "c");
-            Assert.AreEqual(size, dict.Count);
+        [TestMethod()]
+        public void AddTest()
+        {
+            var dict = MakeBasicDictionary();
+            dict.Add("keyD", "valD");
+            dict.Add("keyE", "valE");
+
+            Assert.IsTrue(dict.ContainsKey("keyA"));
+            Assert.IsFalse(dict.ContainsKey("keyM"));
+            Assert.IsTrue(dict.ContainsKey("keyC"));
+            Assert.IsTrue(dict.ContainsKey("keyD"));
+        }
+
+        [TestMethod()]
+        public void ClearTest()
+        {
+            var dict = MakeBasicDictionary();
+            var initSize = dict.Count;
+            Assert.IsTrue(dict.Count == initSize);
+
+            dict.Clear();
+            Assert.IsTrue(dict.Count == 0);
         }
 
         [TestMethod()]
         public void ContainsKeyTest()
         {
-            IDictionary<string, int> dict = new ArrayDictionary<string, int>();
+            var dict = MakeBasicDictionary();
 
-            dict.Add("a", 1);
-            dict.Add("b", 2);
-            dict.Add("c", 3);
-            dict.Add("a", 4);
-            dict.RemoveKeyValuePair("c");
-            dict.Add("c", 5);
-            dict.Add("d", 6);
-            dict.Add("a", 5);
-            dict.RemoveKeyValuePair("c");
+            Assert.IsTrue(dict.ContainsKey("keyA"));
+            Assert.IsFalse(dict.ContainsKey("keyD"));
+            Assert.IsTrue(dict.ContainsKey("keyC"));
+        }
 
-            Assert.IsTrue(dict.ContainsKey("a"));
-            Assert.IsTrue(dict.ContainsKey("b"));
-            Assert.IsFalse(dict.ContainsKey("c"));
-            Assert.IsTrue(dict.ContainsKey("d"));
-            Assert.IsFalse(dict.ContainsKey("e"));
+        [TestMethod()]
+        public void IsEmptyTest()
+        {
+            var dict = MakeBasicDictionary();
+            dict.Clear();
+            Assert.IsTrue(dict.IsEmpty());
+        }
+
+        [TestMethod()]
+        public void RemoveTest()
+        {
+            var dict = MakeBasicDictionary();
+
+            Assert.IsTrue(dict.ContainsKey("keyA"));
+            Assert.IsTrue(dict.ContainsKey("keyB"));
+
+            dict.Remove("keyA");
+            dict.Remove("keyB");
+
+            Assert.IsFalse(dict.ContainsKey("keyA"));
+            Assert.IsFalse(dict.ContainsKey("keyB"));
+
+        }
+
+        [TestMethod()]
+        public void ConstructorTest()
+        {
+            var dict1 = MakeBasicDictionary();
+            var dict1Keys = new List<string>();
+            var dict1Values = new List<string>();
+
+            foreach (var item in dict1)
+            {
+                dict1Keys.Add(item.Key);
+                dict1Values.Add(item.Value);
+            }
+
+            var dict2 = MakeBasicDictionary();
+            var dict2Keys = new List<string>();
+            var dict2Values = new List<string>();
+
+            foreach (var item in dict2)
+            {
+                dict2Keys.Add(item.Key);
+                dict2Values.Add(item.Value);
+            }
+
+            CollectionAssert.AreEqual(dict1Keys, dict2Keys);
+            CollectionAssert.AreEqual(dict1Values, dict2Values);
+        }
+
+        [TestMethod()]
+        public void TryGetValueTest()
+       {
+           var returnValue = "";
+           var dict = MakeBasicDictionary();
+           dict.TryGetValue("keyA", out returnValue);
+           Assert.IsTrue(returnValue.Equals("valA"));
+       }
+
+        [TestMethod()]
+        public void CopyToTest()
+        {
+            var dict = MakeBasicDictionary();
+            var collection = new KeyValuePair<string, string>[dict.Count];
+            dict.CopyTo(collection, 0);
+            Assert.IsTrue(collection.Length == dict.Count);
         }
 
         [TestMethod()]
         public void UpdatesSizeTest()
         {
-            IDictionary<string, string> dict = new ArrayDictionary<string, string>();
+            var dict = MakeBasicDictionary();
             var initSize = dict.Count;
-            dict.Add("keyA", "valA");
+            dict.Add("keyD", "valD");
 
             Assert.AreEqual(initSize + 1, dict.Count);
+        }
+
+        [TestMethod()]
+        public void PutSameKeyTest()
+        {
+            var dict = new ArrayDictionary<string, string>();
+            dict.Add("a", "b");
+            var size = dict.Size();
+
+            dict.Add("a", "c");
+            Assert.AreEqual(dict.Count, size);
+            Assert.AreEqual("c", dict.GetValue("a"));
+            
         }
     }
 }

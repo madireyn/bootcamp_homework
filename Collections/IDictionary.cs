@@ -12,5 +12,10 @@ namespace Collections
         TValue RemoveAndReturnValue(TKey key);
 
         void RemoveKeyValuePair(TKey key);
+
+        TValue GetValue(TKey key);
+
+
+
     }
 }
