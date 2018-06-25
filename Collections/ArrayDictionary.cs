@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Net.Mime;
 
 namespace Collections
 {
 
-
     public class ArrayDictionary<TKey, TValue> : Collections.IDictionary<TKey, TValue>
     {
-        private Pair[] _pairs;
+        private Pair<TKey, TValue>[] _pairs;
 
         public ArrayDictionary()
         {
@@ -23,18 +18,29 @@ namespace Collections
         private void ExpandArrayCheck()
         {
             if (Count != _pairs.Length) return;
-            var newItems = MakeArrayOfPairs(_pairs.Length * 2);
+            var newItems = MakeArrayOfPairs(_pairs.Length + 10);
             Transfer(_pairs, newItems);
             _pairs = newItems;
         }
 
-        private Pair[] MakeArrayOfPairs(int arraySize)
+        private Pair<TKey, TValue>[] MakeArrayOfPairs(int arraySize)
         {
-            return new Pair[arraySize];
+            if (arraySize < 0)
+            {
+                throw new IndexOutOfRangeException();
+            }
+
+            return new Pair<TKey, TValue>[arraySize];
         }
 
-        private void Transfer(Pair[] source, Pair[] destination)
+        private void Transfer(Pair<TKey, TValue>[] source, Pair<TKey, TValue>[] destination)
         {
+
+            if (source.Length > destination.Length)
+            {
+                throw new IndexOutOfRangeException();
+            }
+
             for (var i = 0; i < Count; i++)
             {
                 destination[i] = source[i];
@@ -57,15 +63,23 @@ namespace Collections
         {
             get
             {
-                if (!this.TryGetValue(key, out var value))
-                    throw new KeyNotFoundException();
+                var index = GetIndex(key);
 
-                return value;
+                if (index > _pairs.Length)
+                {
+                    throw new IndexOutOfRangeException();
+                }
+
+                if (!TryGetValue(key, out var value))
+                {
+                    throw new KeyNotFoundException();
+                }
+                return _pairs[index].Value;
             }
             set
             {
                 var index = GetIndex(key);
-                _pairs[index] = new Pair(key, value);
+                _pairs[index].Value = value;
             }
         }
 
@@ -79,7 +93,7 @@ namespace Collections
                     var key = _pairs[i].Key;
                     keysList.Add(key);
                 }
-
+                
                 return keysList;
             }
 
@@ -89,13 +103,14 @@ namespace Collections
         {
             get
             {
-                var valueCollection = new Collection<TValue>();
-                foreach (var keyValuePair in _pairs)
+                var valuesList = new List<TValue>();
+                for (var i = 0; i < Count; i++)
                 {
-                    valueCollection.Add(keyValuePair.Value);
+                    var value = _pairs[i].Value;
+                    valuesList.Add(value);
                 }
 
-                return valueCollection;
+                return valuesList;
             }
         }
 
@@ -103,23 +118,32 @@ namespace Collections
 
         public bool IsReadOnly => false;
 
+        private void KeyCheck(TKey key)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException();
+            }
+        }
+
         public void Add(TKey key, TValue value)
         {
+            KeyCheck(key);
             ExpandArrayCheck();
             var index = GetIndex(key);
-            if (index != -1)
+            if (index != -1 && value != null)
             {
-                this[key] = value;
+                _pairs[index].Value = value;
             }
             else
             {
                 Count++;
-                var newPair = new Pair(key, value);
+                var newPair = new Pair<TKey, TValue>(key, value);
                 _pairs[Count - 1] = newPair;
             }
         }
 
-        public void Add(System.Collections.Generic.KeyValuePair<TKey, TValue> item) => Add(item.Key, item.Value);
+        public void Add(KeyValuePair<TKey, TValue> item) => Add(item.Key, item.Value);
 
         public void Clear()
         {
@@ -127,9 +151,10 @@ namespace Collections
             {
                 RemoveKeyValuePair(_pairs[i].Key);
             }
+            Count = 0;
         }
 
-        public bool Contains(System.Collections.Generic.KeyValuePair<TKey, TValue> item)
+        public bool Contains(KeyValuePair<TKey, TValue> item)
         {
             var index = GetIndex(item.Key);
             return _pairs[index].Equals(item.Value);
@@ -137,11 +162,22 @@ namespace Collections
 
         public bool ContainsKey(TKey key)
         {
+            KeyCheck(key);
             return GetIndex(key) != -1;
         }
 
-        public void CopyTo(System.Collections.Generic.KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
+            if (array == null)
+            {
+                throw new ArgumentNullException();
+            }
+
+            if (arrayIndex < 0)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+
             Copy(this, array, arrayIndex);
         }
 
@@ -168,14 +204,14 @@ namespace Collections
             }
         }
 
-        public IEnumerator<System.Collections.Generic.KeyValuePair<TKey, TValue>> GetEnumerator()
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
             for (var i = 0; i < Count; i++)
             {
                 var keyValuePair = new KeyValuePair<TKey, TValue>(_pairs[i].Key, _pairs[i].Value);
                 yield return keyValuePair;
             }
-            
+
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -184,12 +220,13 @@ namespace Collections
         }
 
         public bool IsEmpty()
-            {
-                return Count == 0;
-            }
+        {
+            return Count == 0;
+        }
 
         public TValue RemoveAndReturnValue(TKey key)
         {
+            KeyCheck(key);
             var index = GetIndex(key);
             var removedVal = default(TValue);
 
@@ -210,6 +247,7 @@ namespace Collections
 
         public bool Remove(TKey key)
         {
+            KeyCheck(key);
             if (GetIndex(key) == -1)
             {
                 return false;
@@ -218,7 +256,7 @@ namespace Collections
             return true;
         }
 
-        public bool Remove(System.Collections.Generic.KeyValuePair<TKey, TValue> item)
+        public bool Remove(KeyValuePair<TKey, TValue> item)
         {
             return Remove(item.Key);
         }
@@ -227,17 +265,19 @@ namespace Collections
 
         public bool TryGetValue(TKey key, out TValue value)
         {
+            KeyCheck(key);
             if (GetIndex(key) == -1)
             {
                 value = default(TValue);
                 return false;
             }
-            value = this[key];
+            value = _pairs[GetIndex(key)].Value;
             return true;
         }
 
         public void RemoveKeyValuePair(TKey key)
         {
+            KeyCheck(key);
             var index = GetIndex(key);
             if (index == -1)
             {
@@ -253,10 +293,30 @@ namespace Collections
             Count--;
         }
 
-        private class Pair
+        public TValue GetValue(TKey key)
+        {
+            KeyCheck(key);
+            var index = GetIndex(key);
+            var returnVal = default(TValue);
+            if (index == -1)
+            {
+                throw new IndexOutOfRangeException();
+            }
+            else
+            {
+                if ((_pairs[index].Key != null && _pairs[index].Key.Equals(key) ||
+                     (_pairs[index].Key == null)))
+                { 
+                    returnVal = _pairs[index].Value;
+                }
+            }
+            return returnVal;
+        }
+
+        private class Pair<TKey, TValue>
         {
             public TKey Key { get; }
-            public TValue Value { get; }
+            public TValue Value { get; set; }
 
             public Pair(TKey key, TValue value)
             {
