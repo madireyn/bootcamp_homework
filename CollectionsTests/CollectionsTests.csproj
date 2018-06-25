@@ -7,7 +7,7 @@
     <ProjectGuid>{6B116EEB-E627-4269-A65D-9C1501D692E7}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CollectionsTests</RootNamespace>
+    <RootNamespace>Collections.Tests</RootNamespace>
     <AssemblyName>CollectionsTests</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
