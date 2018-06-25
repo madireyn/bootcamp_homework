@@ -275,6 +275,13 @@ namespace Collections
             return true;
         }
 
+
+        private bool KeyValuePairCheck(int index, TKey key)
+        {
+            return (_pairs[index] != null) && (_pairs[index].Key == null ||
+                                               _pairs[index].Key.Equals(key));
+        }
+
         public void RemoveKeyValuePair(TKey key)
         {
             KeyCheck(key);
@@ -284,8 +291,7 @@ namespace Collections
                 throw new KeyNotFoundException();
             }
 
-            if ((_pairs[index] != null) && (_pairs[index].Key == null ||
-                                            _pairs[index].Key.Equals(key)))
+            if (KeyValuePairCheck(index, key))
             {
                 _pairs[index] = _pairs[Count - 1];
                 _pairs[Count - 1] = null;
@@ -304,8 +310,7 @@ namespace Collections
             }
             else
             {
-                if ((_pairs[index].Key != null && _pairs[index].Key.Equals(key) ||
-                     (_pairs[index].Key == null)))
+                if (KeyValuePairCheck(index, key))
                 { 
                     returnVal = _pairs[index].Value;
                 }

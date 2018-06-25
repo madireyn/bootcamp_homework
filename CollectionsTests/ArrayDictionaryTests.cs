@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Collections.Tests
 {
@@ -79,27 +80,9 @@ namespace Collections.Tests
         public void ConstructorTest()
         {
             var dict1 = MakeBasicDictionary();
-            var dict1Keys = new List<string>();
-            var dict1Values = new List<string>();
-
-            foreach (var item in dict1)
-            {
-                dict1Keys.Add(item.Key);
-                dict1Values.Add(item.Value);
-            }
-
             var dict2 = MakeBasicDictionary();
-            var dict2Keys = new List<string>();
-            var dict2Values = new List<string>();
 
-            foreach (var item in dict2)
-            {
-                dict2Keys.Add(item.Key);
-                dict2Values.Add(item.Value);
-            }
-
-            CollectionAssert.AreEqual(dict1Keys, dict2Keys);
-            CollectionAssert.AreEqual(dict1Values, dict2Values);
+            CollectionAssert.AreEqual(dict1.ToList(), dict2.ToList());
         }
 
         [TestMethod()]
